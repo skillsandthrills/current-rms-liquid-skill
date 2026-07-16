@@ -55,6 +55,62 @@ section: stylesheet
 - `<link rel="stylesheet" href="...">` to external fonts (Typekit/Google) works; test PDF kerning.
 - HTML form elements (`<input type="checkbox">`, `<textarea>`) render in the browser preview — useful for interactive checklists viewed on tablets (not meaningful in PDF).
 
+## Discussion template export file format
+
+Exported discussion templates (emails) are a single HTML file — no `*** LAYOUT SECTION ***` blocks — with front matter:
+
+```
+---
+name: 'Rental Quotation Email'
+module: Opportunity            # or Invoice, etc.
+subject: '[{{ opportunity.store.name }}] Quote: "{{ opportunity.name }}"'
+active: true
+---
+<html email body>
+```
+
+- **The `subject:` line supports full Liquid**, including conditionals:
+  `subject: 'Rental {% if opportunity.state <= 2 %}Quotation{% else %}Agreement{% endif %}: "{{ opportunity.name }}"'`
+- Bodies are HTML **emails**: inline styles, nested-table layout, MSO conditional comments, and a hidden "preheader" span for inbox preview text. Flexbox/grid are unreliable in email clients — same table discipline as PDFs.
+- Liquid inside HTML comments (`<!-- ... -->`) is still evaluated — commenting out HTML does NOT disable the Liquid in it. Use `{% comment %}` to truly disable logic.
+
+### Roots and special variables in discussion templates
+
+- `{{ document_approval_url }}` — link to the online document approval page (customer views/approves the quote or signs the agreement). The single most important variable in quote/agreement emails.
+- `current_user` — the sending user: `.name`, `.email`, `.telephone`, `.title`, `.icon_url` (avatar).
+- `current_store` — the active store/branch: `.name`, `.telephone`.
+- `opportunity.state` — numeric **state** (distinct from `status`): `2` = Quotation, `3` = Order. Usable in subject lines and body logic.
+- `customer` — the member record, with `.id`, `.opportunities` (loopable to count past orders), `.contacts`, and member custom fields.
+- `invoice.invoice_id` (internal id), `invoice.description`, `invoice.sources`, and `invoice.transactions` (loop: `.amount`, `.transaction_type_name`, `.payment_method_name`, `.reference`, `.transaction_at`).
+
+### Patterns verified in production emails
+
+**Epoch-seconds date comparison** (dates compare as strings otherwise — cast with `| minus: 0`):
+
+```liquid
+{% assign OpEnd = opportunity.ends_at | date: "%s" | minus: 0 %}
+{% assign Expiry = customer.some_date_custom_field | date: "%s" | minus: 0 %}
+{% if Expiry > OpEnd %} still valid at the end of the rental {% endif %}
+```
+
+**Pseudo-random content pick** (no `Math.random` in Liquid — hash the clock):
+
+```liquid
+{% assign greetings = "Welcome back! / Great to see you again. / Thanks for returning." | split: " / " %}
+{% assign idx = "now" | date: "%N" | modulo: greetings.size %}
+{{ greetings[idx] }}
+```
+
+**Repeat-customer detection:**
+
+```liquid
+{% assign past = 0 %}
+{% for opp in customer.opportunities %}
+  {% unless opp.name contains "(copy " %}{% assign past = past | plus: 1 %}{% endunless %}
+{% endfor %}
+{% if past >= 2 %}Welcome back!{% endif %}
+```
+
 ## Filters verified working (undocumented)
 
 | Filter | Example | Notes |
@@ -66,6 +122,9 @@ section: stylesheet
 | `default` | `{{ x \| default: "0.00" }}` | fallback for blank values |
 | `truncatewords` | `{{ order.name \| truncatewords: 3, "" }}` | second arg replaces the "..." suffix |
 | `truncate` (2-arg) | `{{ s \| truncate: 2, '' }}` | first N chars with custom/empty ellipsis |
+| `join` | `{{ parts \| join: "-" }}` | array → string |
+| `strip` | `{{ phone \| strip }}` | trim whitespace |
+| `.size` | `{{ myArray.size }}` | array/string length (property, not filter) |
 | `qrcode` | `{{ asset.url \| qrcode }}` | emits inline QR SVG (Current-RMS specific) |
 | `code128B` | `{{ asset.asset_number \| code128B }}` | Code 128 barcode SVG (Current-RMS specific) |
 | `base64` | `<img src="data:image/svg+xml;base64,{{ asset.asset_number \| code128B \| base64 }}">` | base64-encode, pairs with barcode filters |
