@@ -20,14 +20,14 @@ This skill provides:
 **Claude Code (Mac/Linux):**
 
 ```bash
-git clone https://github.com/<your-username>/current-rms-liquid-skill.git ~/.claude/skills/current-rms-liquid
+git clone https://github.com/skillsandthrills/current-rms-liquid-skill.git ~/.claude/skills/current-rms-liquid
 python3 ~/.claude/skills/current-rms-liquid/scripts/fetch-references.py
 ```
 
 **Claude Code (Windows, PowerShell):**
 
 ```powershell
-git clone https://github.com/<your-username>/current-rms-liquid-skill.git $env:USERPROFILE\.claude\skills\current-rms-liquid
+git clone https://github.com/skillsandthrills/current-rms-liquid-skill.git $env:USERPROFILE\.claude\skills\current-rms-liquid
 python $env:USERPROFILE\.claude\skills\current-rms-liquid\scripts\fetch-references.py
 ```
 
