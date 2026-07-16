@@ -16,7 +16,7 @@ This skill provides:
 - **Discussion template knowledge**: Liquid-enabled subject lines, `document_approval_url`, email-safe HTML rules
 - A full offline reference: every documented object with its complete attribute allow-list
 
-## Install — Claude Desktop App (no technical experience needed)
+## 🚧 ⚙️ Install — Claude Desktop App 🚧 ⚙️ (no technical experience needed)
 
 This is the easiest way to install if you've never used a terminal. You need the **Claude desktop app** — the skill cannot be installed from the claude.ai website in your browser.
 
