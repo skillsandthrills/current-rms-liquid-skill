@@ -1,0 +1,11 @@
+{
+  "name": "current-rms-liquid",
+  "description": "Write and debug Liquid markup for Current-RMS document layouts and discussion templates (quotations, rental agreements, invoices, delivery notes, barcode labels, emails). Current-RMS Liquid is NOT Shopify Liquid — this skill enforces the documented Current-RMS dialect so generated templates don't reference objects, filters, or tags that don't exist.",
+  "version": "1.0.0",
+  "author": {
+    "name": "skillsandthrills"
+  },
+  "license": "MIT",
+  "keywords": ["current-rms", "liquid", "rental", "templates", "document-layouts", "quotations", "invoices"],
+  "skills": "./skills/"
+}

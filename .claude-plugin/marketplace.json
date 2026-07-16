@@ -1,0 +1,32 @@
+{
+  "name": "current-rms-liquid-skill",
+  "owner": {
+    "name": "skillsandthrills"
+  },
+  "metadata": {
+    "description": "Claude skill for Current-RMS Liquid templates — stops AI assistants from using Shopify Liquid syntax that doesn't exist in Current-RMS",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "current-rms-liquid",
+      "source": "./",
+      "description": "Write and debug Liquid markup for Current-RMS document layouts and discussion templates (quotations, rental agreements, invoices, delivery notes, barcode labels, emails). Enforces the documented Current-RMS dialect: correct objects, filters, tags, PDF renderer limits, and custom-field rules — no Shopify-only syntax.",
+      "version": "1.0.0",
+      "author": {
+        "name": "skillsandthrills"
+      },
+      "keywords": [
+        "current-rms",
+        "liquid",
+        "rental",
+        "templates",
+        "document-layouts",
+        "quotations",
+        "invoices"
+      ],
+      "category": "productivity",
+      "strict": false
+    }
+  ]
+}
