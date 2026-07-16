@@ -124,4 +124,6 @@ The HTML→PDF converter is an old WebKit-era engine. Violating these produces P
 | `references/consolidation.md`, `references/deal-pricing.md` | Consolidated opportunities, deal pricing |
 | `references/best-practices.md` | Indentation, commenting, troubleshooting |
 
+If the files above (other than `object-index.md`) are missing, they haven't been fetched yet — run `python3 scripts/fetch-references.py` from the skill directory to download them from the official docs.
+
 Official docs (source of these references): https://current-rms.gitbook.io/liquid-syntax — machine-readable index at `/llms.txt`, any page fetchable as Markdown by appending `.md`. When in doubt, fetch the live page.

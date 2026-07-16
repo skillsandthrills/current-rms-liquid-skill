@@ -1,1 +1,15 @@
 .DS_Store
+# Fetched from official Current-RMS docs at install time (not redistributed)
+references/objects/
+references/attributes-front-matter.md
+references/best-practices.md
+references/consolidation.md
+references/custom-fields.md
+references/date-formats.md
+references/deal-pricing.md
+references/filters.md
+references/objects-basics.md
+references/operators.md
+references/pdf-limitations.md
+references/special-items.md
+references/tags.md
