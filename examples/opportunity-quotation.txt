@@ -1,0 +1,232 @@
+---
+name: 'Example Quotation'
+module: Opportunity
+states: ["Quotation"]
+statuses: ["Open", "Provisional", "Reserved"]
+page_size: A4
+orientation: Portrait
+margin:
+  top: 85
+  left: 10
+  bottom: 15
+  right: 10
+colors:
+  headings: '#4477aa'
+  heading_text: 'white'
+  info_bars: '#e6e6e6'
+  info_bars_text: '#666666'
+  body_text: '#666666'
+  borders: '#d1d1d1'
+fields:
+  closing_text: ''
+layout_flags:
+  show_item_descriptions: 'true'
+filename_fields: ["number", "subject", "document_name", "id"]
+active: true
+description: 'Sanitized example layout for the current-rms-liquid skill'
+---
+
+*** LAYOUT SECTION ***
+---
+section: header
+---
+
+{% comment %} Header repeats on every PDF page. Keep it short. {% endcomment %}
+<div class="section clearfix">
+	<div class="client_icon">
+		<img src="{{ company.icon_url }}" style="max-height: 80px;">
+	</div>
+</div>
+
+<div class="section address-section clearfix">
+	<div class="store_address">
+		<address>
+			{{ company.name }}<br/>
+			{{ order.store_address | newline_to_br }}<br/>
+			{% if order.store_email != blank %}{{ order.store_email }}<br/>{% endif %}
+			{% if order.store_telephone != blank %}{{ order.store_telephone }}<br/>{% endif %}
+		</address>
+	</div>
+	<div class="billing_address">
+		<address>
+			<strong>{{ order.billing_address_name }}</strong>
+			<p>{{ order.billing_address | newline_to_br }}</p>
+		</address>
+	</div>
+</div>
+
+<div class="section title-section clearfix">
+	<h3>Quotation: {{ order.name }}</h3>
+</div>
+
+*** LAYOUT SECTION ***
+---
+section: body
+---
+
+{% comment %} Key details bar. Note: schedule attributes differ between
+standard and extended scheduling — check order.schedule_type_is_standard? {% endcomment %}
+<div class="section details-section">
+	<div class="document-details">
+		<table>
+			<tbody>
+				<tr>
+					<td class="label-details">Quote Date</td>
+					<td>{{ order.ordered_at | localedate }}</td>
+				</tr>
+				<tr>
+					<td class="label-details">Our Reference</td>
+					<td>{{ order.number }}</td>
+				</tr>
+				<tr>
+					<td class="label-details">Rental Period</td>
+					<td>{{ order.charge_starts_at | localedatetime }} to {{ order.charge_ends_at | localedatetime }}</td>
+				</tr>
+				<tr>
+					<td class="label-details">{% if order.customer_collecting %}Customer Collects{% else %}Delivery{% endif %}</td>
+					<td>{% if order.deliver_starts_at != blank %}{{ order.deliver_starts_at | localedatetime }}{% endif %}</td>
+				</tr>
+				<tr>
+					<td class="label-details">{% if order.customer_returning %}Customer Returns{% else %}Collection{% endif %}</td>
+					<td>{% if order.collect_starts_at != blank %}{{ order.collect_starts_at | localedatetime }}{% endif %}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<div class="delivery_address">
+		<p><strong>Delivery Address</strong></p>
+		<address>
+			{{ order.delivery_address_name }}<br>
+			{{ order.delivery_address | newline_to_br }}
+		</address>
+	</div>
+</div>
+
+{% if order.external_description != blank %}
+<div class="section notes">
+	<h4>Notes</h4>
+	<p>{{ order.external_description | newline_to_br }}</p>
+</div>
+{% endif %}
+
+{% comment %} The canonical Current-RMS items loop: every row is one of
+subtotal / group / item, and accessories usually render dimmer or hidden. {% endcomment %}
+<div class="section body-section">
+	<table class="table item-list">
+		<thead>
+			<tr>
+				<th>Item</th>
+				<th>Type</th>
+				<th class="align-right">Qty</th>
+				<th class="align-right">Price</th>
+				<th class="align-right">Days</th>
+				<th class="align-right">Total</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for item in order.items %}
+				{% if item.is_subtotal? %}
+					{% if item.depth == 1 %}
+						<tr class="totals-row">
+							<td class="align-right" colspan="5">Total for {{ item.subtotal_name }}:</td>
+							<td class="align-right">{{ item.subtotal | currency }}</td>
+						</tr>
+					{% endif %}
+				{% elsif item.is_group? %}
+					<tr>
+						<td colspan="6" style="padding-left: {{ item.depth_padding }}px;">
+							<h4>{{ item.name }}</h4>
+						</td>
+					</tr>
+				{% elsif item.is_item? %}
+					{% comment %} Hide zero-charge components {% endcomment %}
+					{% if item.is_accessory? and item.accessory_mode_is_component? and item.charge_total == 0 %}
+					{% else %}
+						<tr style="background-color: {% cycle 'rows': '#fafafa', '#ffffff' %};">
+							<td style="padding-left: {{ item.depth_padding }}px;">
+								{{ item.name }}
+								{% if item.is_accessory? %}<em>({{ item.accessory_mode_name }})</em>{% endif %}
+							</td>
+							<td>{% unless item.transaction_type_name == "Rental" %}{{ item.transaction_type_name }}{% endunless %}</td>
+							<td class="align-right">
+								{{ item.quantity | number }}
+								{% if item.is_service? %} x {{ item.chargeable_days | number:0 }} {{ item.service_unit_name }}{% endif %}
+							</td>
+							<td class="align-right">{{ item.discounted_price | number:2 }}</td>
+							<td class="align-right">{% unless item.is_sale? %}{{ item.chargeable_days | number:0 }}{% endunless %}</td>
+							<td class="align-right">{{ item.charge_total | number:2 }}</td>
+						</tr>
+						{% if attributes.flags.show_item_descriptions == true and item.description != blank %}
+							<tr>
+								<td colspan="6" style="padding-left: {{ item.depth_padding | plus:15 }}px;"><i>{{ item.description | newline_to_br }}</i></td>
+							</tr>
+						{% endif %}
+					{% endif %}
+				{% endif %}
+			{% endfor %}
+		</tbody>
+	</table>
+
+	<table class="table closing-totals">
+		<tbody>
+			{% if order.has_discount? %}
+				<tr><td><strong>Discount</strong></td>
+					<td class="align-right">-{{ order.discount_total | currency }}</td></tr>
+			{% endif %}
+			<tr><td><strong>Subtotal</strong></td>
+				<td class="align-right">{{ order.charge_excluding_tax_total | currency }}</td></tr>
+			<tr><td><strong>Tax</strong></td>
+				<td class="align-right">{{ order.tax_total | currency }}</td></tr>
+			<tr><td><strong>Total</strong></td>
+				<td class="align-right"><strong>{{ order.charge_including_tax_total | currency }}</strong></td></tr>
+		</tbody>
+	</table>
+</div>
+
+{% if attributes.fields.closing_text != blank %}
+<div class="section clearfix notes">
+	<p>{{ attributes.fields.closing_text | newline_to_br }}</p>
+</div>
+{% endif %}
+
+*** LAYOUT SECTION ***
+---
+section: footer
+---
+
+{% comment %} .page / .topage are replaced by the PDF renderer {% endcomment %}
+<div class="section">
+	Page <span class="page">1</span> of <span class="topage">1</span>
+</div>
+
+*** LAYOUT SECTION ***
+---
+section: stylesheet
+---
+
+<style type="text/css">
+	/* Liquid works inside CSS: pull colors from layout attributes.
+	   PDF renderer: NO flexbox/grid/columns — floats and tables only. */
+	.client_icon { float: right; height: 80px; }
+	.section { color: {{ attributes.colors.body_text }}; width: 100%; }
+	.address-section .store_address { float: right; font-size: 0.8em; text-align: right; }
+	.address-section .billing_address { float: left; }
+	.details-section {
+		background-color: {{ attributes.colors.info_bars }};
+		color: {{ attributes.colors.info_bars_text }};
+		clear: both; float: left; margin: 10px 0 20px 0; padding: 20px; width: 100%;
+	}
+	.details-section .document-details { float: left; width: 66%; }
+	.details-section .delivery_address { float: left; width: 34%; }
+	.body-section { clear: both; font-size: 0.85em; }
+	.totals-row { background-color: {{ attributes.colors.info_bars }}; font-weight: bold; }
+	.closing-totals { border-top: 2px solid {{ attributes.colors.borders }};
+		border-bottom: 2px solid {{ attributes.colors.borders }}; }
+	.label-details { padding-right: 30px; font-weight: bold; }
+	.table.item-list thead {
+		background-color: {{ attributes.colors.headings }};
+		color: {{ attributes.colors.heading_text }};
+	}
+	.align-right { text-align: right; }
+	address { margin: 10px 0; }
+</style>

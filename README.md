@@ -49,8 +49,12 @@ python3 scripts/fetch-references.py   # re-fetches the latest official docs
 SKILL.md                      # Core dialect rules Claude loads when the skill triggers
 references/
   object-index.md             # Every object + complete attribute allow-list
+  verified-in-production.md   # Export file format + undocumented syntax verified in real layouts
   objects/                    # Full per-object reference (fetched at install)
   filters.md, tags.md, ...    # Syntax references (fetched at install)
+examples/
+  opportunity-quotation.txt   # Complete importable quotation layout (canonical items loop)
+  barcode-label.txt           # Label-printer layout with qrcode/code128B filters
 scripts/
   fetch-references.py         # Downloads + cleans the official docs (stdlib only)
 ```

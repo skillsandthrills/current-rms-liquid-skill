@@ -19,14 +19,14 @@ These are the most common hallucinations. None of them exist in Current-RMS:
 | `{% form %}`, `{% paginate %}`, `{% schema %}`, `{% style %}`, `{% liquid %}`, `{% echo %}` | Not available |
 | `img_url`, `asset_url`, `asset_img_url`, `file_url`, `stylesheet_tag`, `script_tag` | Not available — use full external URLs in plain HTML `<img>`/`<link>` tags |
 | `handleize`, `json`, `t` (translation), `pluralize`, `weight_with_unit` | Not available |
-| `where`, `map`, `default`, `escape`, `join`, `split`, `size`, `replace`, `strip` | Not documented for Current-RMS — do not rely on them (see tiers below) |
+| `where`, `map`, `escape`, `join`, `size`, `strip`, `sort_by` | Unverified in Current-RMS — do not rely on them (see tiers below) |
 | `customer.orders`, `order.line_items` | `member.opportunities`, `order.items` |
 
 **Vocabulary tiers — how to decide if something is allowed:**
 
 1. **Documented in this skill's `references/`** → safe, use freely.
-2. **Core Liquid syntax** (objects `{{ }}`, tags `{% %}`, the documented tags/filters/operators below) → safe.
-3. **Anything else** — including standard-Liquid filters not in the documented list, and any attribute not in `references/object-index.md` — → **do not emit it.** If it seems genuinely necessary, flag it in your response as unverified and tell the user to test it in the document preview before relying on it. Never silently include unverified markup.
+2. **Verified in production** (`references/verified-in-production.md`) — undocumented but confirmed working in real layouts: `split`, `replace`, `slice`, `url_encode`, `default`, `truncatewords`, two-arg `truncate`, barcode filters `qrcode`/`code128B`/`base64`, `{% break %}`, `{% raw %}`, `forloop.index0`, array indexing → safe.
+3. **Anything else** — including standard-Liquid filters not on either list, and any attribute not in `references/object-index.md` or `references/verified-in-production.md` — → **do not emit it.** If it seems genuinely necessary, flag it in your response as unverified and tell the user to test it in the document preview before relying on it. Never silently include unverified markup.
 
 An undefined object in Liquid renders as *empty output, not an error* — a wrong attribute name produces a silently blank field on a real quote or invoice. Treat unverified names as bugs even though they "work."
 
@@ -36,7 +36,7 @@ The root variable depends on which module the layout/template is created against
 
 | Context | Root objects |
 |---|---|
-| Opportunity **document layout** (quote, rental agreement, delivery note) | `order` (the opportunity), `order.items`, `order.member` / `customer`, `company` (your business), `attributes` |
+| Opportunity **document layout** (quote, rental agreement, delivery note) | `order` (the opportunity), `order.items`, `order.member` / `customer`, `company` (your business), `user` / `current_user` (rendering user), `owner_user` (opportunity owner), `order.store` (branch), `attributes` |
 | Opportunity **discussion template** (email) | `opportunity` (not `order`!) |
 | Invoice document layout | `invoice`, `invoice.items`, `invoice.sources` (source opportunities), `company` |
 | Project layout | `project`, `project.opportunities` |
@@ -51,7 +51,7 @@ Before writing a template, open `references/object-index.md` to confirm every at
 
 ## Documented filters — the complete list
 
-Anything not on this list is tier 3 (do not emit).
+Anything not on this list or in `references/verified-in-production.md` is tier 3 (do not emit).
 
 - **Formatting:** `currency`, `number` / `number:N` (decimal places), `localedate`, `localedatetime`, `timezone:"Region/City"`, `date:"%strftime"`, `newline_to_br`, `markdown`, `bool_to_word` (true/false → localized Yes/No), `to_words` (number → words, for invoices)
 - **String:** `append:"x"`, `prepend:"x"`, `capitalize`, `upcase`, `downcase`, `remove:"x"`, `remove_first:"x"`, `truncate:N`
@@ -89,6 +89,10 @@ Document layouts start with YAML front matter defining `name`, `module`, `page_s
 
 Static content that might change (bank details, disclaimers, T&Cs) belongs in an attribute field, not hardcoded HTML. See `references/attributes-front-matter.md`.
 
+## Layout file structure (exports)
+
+Exported/imported layouts are one file with four `*** LAYOUT SECTION ***` blocks — `header`, `body`, `footer`, and `stylesheet` — each with its own `---` mini front matter, after the main front matter (which also supports `states:`, `statuses:`, `types:`, `filename_fields:`, and `page_size: Custom` + `page_width`/`page_height` in mm for label printers). Liquid works inside the stylesheet section too (`color: {{ attributes.colors.body_text }};`). Footer page numbers: `Page <span class="page">1</span> of <span class="topage">1</span>`. Full format + working examples: `references/verified-in-production.md` and `examples/`.
+
 ## PDF renderer constraints (document layouts)
 
 The HTML→PDF converter is an old WebKit-era engine. Violating these produces PDFs that don't match the browser preview:
@@ -113,6 +117,8 @@ The HTML→PDF converter is an old WebKit-era engine. Violating these produces P
 
 | File | Contents |
 |---|---|
+| `references/verified-in-production.md` | Export file format, undocumented-but-verified filters/tags/attributes, the canonical items-loop pattern |
+| `examples/` | Complete importable example layouts (quotation, barcode label) |
 | `references/object-index.md` | Every object with its complete attribute list — the allowlist |
 | `references/objects/*.md` | Full per-object docs: access patterns per module, examples, outputs |
 | `references/filters.md`, `references/tags.md`, `references/operators.md` | Full syntax docs with examples |
